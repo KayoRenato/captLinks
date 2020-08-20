@@ -1,21 +1,24 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
-import datetime
-import random
 import re
 
-random.seed(datetime.datetime.now())
+pages = set()
 
-def getLinks(articleUrl):
-  html = urlopen('https://en.wikipedia.org{}'.format(articleUrl))
+def getLinks(pageUrl):
+  global pages
+  html = urlopen('https://en.wikipedia.org{}'.format(pageUrl))
   bs = BeautifulSoup(html, 'html.parser')
+  for link in bs.find_all('a', href=re.compile('^(/wiki/)')):
+    if 'href' in link.attrs:
+      if link.attrs['href'] not in pages:
+        # Nova página
+        newPage = link.attrs['href']
+        print(newPage)
+        pages.add(newPage)
+        getLinks(newPage)
 
-  return bs.find('div', {'id': 'bodyContent'}).find_all('a', href=re.compile('^(/wiki/)((?!:).)*$'))
+getLinks('/wiki/Kevin_Bacon')
+print(pages)
 
-links = getLinks('/wiki/Kevin_Bacon')
-while len(links) > 0:
-  newArticle = links[random.randint(0, len(links)-1)].attrs['href']
-  print(newArticle)
-  links = getLinks(newArticle)
   
 
